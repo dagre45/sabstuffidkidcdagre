@@ -1,0 +1,295 @@
+--[[
+    🔱 NEPTUNE v3.0 - Steal A Brainrot
+    PC: RightShift to toggle
+    Mobile: Drag button on left side
+    
+    FULL COMPLETE WORKING SCRIPT
+]]
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UIS = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local WS = game:GetService("Workspace")
+local Lighting = game:GetService("Lighting")
+
+local Plr = Players.LocalPlayer
+local Char, HRP, Hum
+
+local function GetChar()
+    Char = Plr.Character or Plr.CharacterAdded:Wait()
+    HRP = Char:WaitForChild("HumanoidRootPart")
+    Hum = Char:WaitForChild("Humanoid")
+end
+GetChar()
+Plr.CharacterAdded:Connect(function() task.wait(0.5) GetChar() end)
+
+local S = {
+    AutoCollect = false,
+    AutoSteal = false,
+    Magnet = false,
+    MagnetRange = 80,
+    AutoSell = false,
+    SpeedHack = false,
+    Speed = 50,
+    JumpHack = false,
+    JumpPower = 100,
+    InfJump = false,
+    Noclip = false,
+    Fly = false,
+    FlySpeed = 60,
+    ESP = false,
+    ItemESP = false,
+    Fullbright = false,
+    AntiAFK = true,
+    Collected = 0,
+    Stolen = 0,
+}
+
+local Conn = {}
+local GuiVisible = true
+local FlyActive = false
+local BodyVel, BodyGyro
+
+pcall(function() game:GetService("CoreGui"):FindFirstChild("NeptuneGUI"):Destroy() end)
+
+local G = Instance.new("ScreenGui")
+G.Name = "NeptuneGUI"
+G.ResetOnSpawn = false
+pcall(function() G.Parent = game:GetService("CoreGui") end)
+if not G.Parent then G.Parent = Plr:WaitForChild("PlayerGui") end
+
+-- ════════════════════════════════════
+-- MOBILE OPEN BUTTON
+-- ════════════════════════════════════
+local MobileBtn = Instance.new("TextButton")
+MobileBtn.Size = UDim2.new(0, 46, 0, 46)
+MobileBtn.Position = UDim2.new(0, 8, 0.4, 0)
+MobileBtn.BackgroundColor3 = Color3.fromRGB(75, 25, 200)
+MobileBtn.Text = "🔱"
+MobileBtn.TextSize = 20
+MobileBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+MobileBtn.Font = Enum.Font.GothamBold
+MobileBtn.Active = true
+MobileBtn.Draggable = true
+MobileBtn.Parent = G
+Instance.new("UICorner", MobileBtn).CornerRadius = UDim.new(1, 0)
+Instance.new("UIStroke", MobileBtn).Color = Color3.fromRGB(130, 80, 255)
+
+-- ════════════════════════════════════
+-- MAIN FRAME
+-- ════════════════════════════════════
+local M = Instance.new("Frame")
+M.Size = UDim2.new(0, 480, 0, 370)
+M.Position = UDim2.new(0.5, -240, 0.5, -185)
+M.BackgroundColor3 = Color3.fromRGB(10, 10, 20)
+M.BorderSizePixel = 0
+M.Active = true
+M.Draggable = true
+M.ClipsDescendants = true
+M.Parent = G
+Instance.new("UICorner", M).CornerRadius = UDim.new(0, 10)
+local MStroke = Instance.new("UIStroke", M)
+MStroke.Color = Color3.fromRGB(80, 30, 200)
+MStroke.Thickness = 2
+
+-- Top bar glow
+local TopBar = Instance.new("Frame", M)
+TopBar.Size = UDim2.new(1, 0, 0, 3)
+TopBar.BackgroundColor3 = Color3.fromRGB(100, 50, 255)
+TopBar.BorderSizePixel = 0
+local TG = Instance.new("UIGradient", TopBar)
+TG.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(60, 0, 255)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 200, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(160, 0, 255)),
+})
+task.spawn(function()
+    while G.Parent do
+        for i = 0, 100 do TG.Offset = Vector2.new(i/100, 0) task.wait(0.03) end
+        for i = 100, 0, -1 do TG.Offset = Vector2.new(i/100, 0) task.wait(0.03) end
+    end
+end)
+
+-- Title
+local TTitle = Instance.new("TextLabel", M)
+TTitle.Size = UDim2.new(0, 250, 0, 24)
+TTitle.Position = UDim2.new(0, 12, 0, 7)
+TTitle.BackgroundTransparency = 1
+TTitle.Text = "🔱 NEPTUNE v3.0"
+TTitle.TextSize = 18
+TTitle.Font = Enum.Font.GothamBlack
+TTitle.TextColor3 = Color3.fromRGB(140, 110, 255)
+TTitle.TextXAlignment = Enum.TextXAlignment.Left
+
+local TSub = Instance.new("TextLabel", M)
+TSub.Size = UDim2.new(0, 250, 0, 12)
+TSub.Position = UDim2.new(0, 12, 0, 30)
+TSub.BackgroundTransparency = 1
+TSub.Text = "Steal A Brainrot | RShift / Mobile Btn"
+TSub.TextSize = 8
+TSub.Font = Enum.Font.Gotham
+TSub.TextColor3 = Color3.fromRGB(65, 65, 100)
+TSub.TextXAlignment = Enum.TextXAlignment.Left
+
+-- Close
+local XBtn = Instance.new("TextButton", M)
+XBtn.Size = UDim2.new(0, 24, 0, 24)
+XBtn.Position = UDim2.new(1, -32, 0, 8)
+XBtn.BackgroundColor3 = Color3.fromRGB(170, 30, 30)
+XBtn.Text = "✕"
+XBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+XBtn.TextSize = 11
+XBtn.Font = Enum.Font.GothamBold
+Instance.new("UICorner", XBtn).CornerRadius = UDim.new(0, 5)
+XBtn.MouseButton1Click:Connect(function()
+    for _, c in pairs(Conn) do pcall(function() c:Disconnect() end) end
+    G:Destroy()
+end)
+
+-- Minimize
+local MinB = Instance.new("TextButton", M)
+MinB.Size = UDim2.new(0, 24, 0, 24)
+MinB.Position = UDim2.new(1, -60, 0, 8)
+MinB.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+MinB.Text = "—"
+MinB.TextColor3 = Color3.fromRGB(170, 170, 190)
+MinB.TextSize = 11
+MinB.Font = Enum.Font.GothamBold
+Instance.new("UICorner", MinB).CornerRadius = UDim.new(0, 5)
+
+-- Toggle GUI
+local function ToggleGUI()
+    GuiVisible = not GuiVisible
+    M.Visible = GuiVisible
+    MobileBtn.Text = GuiVisible and "✕" or "🔱"
+    MobileBtn.BackgroundColor3 = GuiVisible and Color3.fromRGB(170, 30, 30) or Color3.fromRGB(75, 25, 200)
+end
+MobileBtn.MouseButton1Click:Connect(ToggleGUI)
+MinB.MouseButton1Click:Connect(ToggleGUI)
+UIS.InputBegan:Connect(function(inp, gpe)
+    if gpe then return end
+    if inp.KeyCode == Enum.KeyCode.RightShift then ToggleGUI() end
+end)
+
+-- Status
+local StatLbl = Instance.new("TextLabel", M)
+StatLbl.Size = UDim2.new(1, -10, 0, 14)
+StatLbl.Position = UDim2.new(0, 5, 1, -18)
+StatLbl.BackgroundTransparency = 1
+StatLbl.TextSize = 9
+StatLbl.Font = Enum.Font.Gotham
+StatLbl.TextColor3 = Color3.fromRGB(50, 190, 50)
+StatLbl.TextXAlignment = Enum.TextXAlignment.Left
+StatLbl.Text = "🟢 Ready"
+
+local function UpdStatus()
+    StatLbl.Text = string.format("🟢 Active | Collected: %d | Stolen: %d", S.Collected, S.Stolen)
+end
+
+-- ════════════════════════════════════
+-- SIDEBAR + CONTENT
+-- ════════════════════════════════════
+local SideBar = Instance.new("Frame", M)
+SideBar.Size = UDim2.new(0, 100, 1, -52)
+SideBar.Position = UDim2.new(0, 4, 0, 46)
+SideBar.BackgroundColor3 = Color3.fromRGB(14, 14, 26)
+SideBar.BorderSizePixel = 0
+Instance.new("UICorner", SideBar).CornerRadius = UDim.new(0, 7)
+local SLayout = Instance.new("UIListLayout", SideBar)
+SLayout.Padding = UDim.new(0, 3)
+SLayout.SortOrder = Enum.SortOrder.LayoutOrder
+local SPad = Instance.new("UIPadding", SideBar)
+SPad.PaddingTop = UDim.new(0, 4)
+SPad.PaddingLeft = UDim.new(0, 3)
+SPad.PaddingRight = UDim.new(0, 3)
+
+local ContentArea = Instance.new("Frame", M)
+ContentArea.Size = UDim2.new(1, -114, 1, -52)
+ContentArea.Position = UDim2.new(0, 108, 0, 46)
+ContentArea.BackgroundColor3 = Color3.fromRGB(14, 14, 26)
+ContentArea.BorderSizePixel = 0
+ContentArea.ClipsDescendants = true
+Instance.new("UICorner", ContentArea).CornerRadius = UDim.new(0, 7)
+
+-- ════════════════════════════════════
+-- TAB BUILDER
+-- ════════════════════════════════════
+local Tabs = {}
+
+local function NewPage(name)
+    local Sc = Instance.new("ScrollingFrame", ContentArea)
+    Sc.Name = name
+    Sc.Size = UDim2.new(1, -6, 1, -6)
+    Sc.Position = UDim2.new(0, 3, 0, 3)
+    Sc.BackgroundTransparency = 1
+    Sc.ScrollBarThickness = 2
+    Sc.ScrollBarImageColor3 = Color3.fromRGB(80, 40, 200)
+    Sc.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    Sc.CanvasSize = UDim2.new(0, 0, 0, 0)
+    Sc.Visible = false
+    local L = Instance.new("UIListLayout", Sc)
+    L.Padding = UDim.new(0, 4)
+    L.SortOrder = Enum.SortOrder.LayoutOrder
+    local P = Instance.new("UIPadding", Sc)
+    P.PaddingTop = UDim.new(0, 3)
+    P.PaddingLeft = UDim.new(0, 3)
+    P.PaddingRight = UDim.new(0, 3)
+    return Sc
+end
+
+local function NewTab(name, icon, ord)
+    local Page = NewPage(name)
+    local B = Instance.new("TextButton", SideBar)
+    B.Size = UDim2.new(1, 0, 0, 26)
+    B.BackgroundColor3 = Color3.fromRGB(22, 22, 38)
+    B.Text = icon .. " " .. name
+    B.TextSize = 10
+    B.Font = Enum.Font.GothamSemibold
+    B.TextColor3 = Color3.fromRGB(120, 120, 150)
+    B.LayoutOrder = ord
+    Instance.new("UICorner", B).CornerRadius = UDim.new(0, 5)
+    Tabs[name] = {B = B, P = Page}
+    B.MouseButton1Click:Connect(function()
+        for _, t in pairs(Tabs) do
+            t.P.Visible = false
+            t.B.BackgroundColor3 = Color3.fromRGB(22, 22, 38)
+            t.B.TextColor3 = Color3.fromRGB(120, 120, 150)
+        end
+        Page.Visible = true
+        B.BackgroundColor3 = Color3.fromRGB(70, 30, 170)
+        B.TextColor3 = Color3.fromRGB(255, 255, 255)
+    end)
+    return Page
+end
+
+-- ════════════════════════════════════
+-- UI ELEMENT BUILDERS
+-- ════════════════════════════════════
+local function Section(p, txt)
+    local L = Instance.new("TextLabel", p)
+    L.Size = UDim2.new(1, 0, 0, 20)
+    L.BackgroundTransparency = 1
+    L.Text = "  ▸ " .. txt
+    L.TextSize = 11
+    L.Font = Enum.Font.GothamBold
+    L.TextColor3 = Color3.fromRGB(110, 80, 255)
+    L.TextXAlignment = Enum.TextXAlignment.Left
+end
+
+local function Toggle(p, txt, key, callback)
+    local F = Instance.new("Frame", p)
+    F.Size = UDim2.new(1, 0, 0, 30)
+    F.BackgroundColor3 = Color3.fromRGB(18, 18, 32)
+    F.BorderSizePixel = 0
+    Instance.new("UICorner", F).CornerRadius = UDim.new(0, 5)
+
+    local L = Instance.new("TextLabel", F)
+    L.Size = UDim2.new(1, -50, 1, 0)
+    L.Position = UDim2.new(0, 8, 0, 0)
+    L.BackgroundTransparency = 1
+    L.Text = txt
+    L.TextSize = 10
+    L.Font = Enum.Font.Gotham
+    L.TextColor3 =
